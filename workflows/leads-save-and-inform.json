@@ -1,0 +1,827 @@
+{
+  "name": "Leads Save and Inform",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "replace-with-your-own-webhook-path",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        192
+      ],
+      "id": "306f0913-71bd-44a0-ac5f-f668725590a7",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        912
+      ],
+      "id": "7d99fb48-d643-443c-8815-b051e2613e7a",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9040b4c0-b59d-470a-98e3-94f3ac4a282c",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "cold",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "e22e46fd-083f-4164-9dbe-bd57157b027a",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "warm",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "fac7c05b-7083-4c0f-acee-d242ef233072",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "hot",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        688
+      ],
+      "id": "ed789827-7447-4dfd-8d33-ea27f1a0afc2",
+      "name": "If unknown status"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4caf938d-b850-4005-982c-9849238f85dd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cold"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "68ea9d51-69b2-45ae-a14e-d90f6c57f9d6",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "warm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "397d8764-fee9-42c5-b98c-ee6ec787320d",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "hot"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        688
+      ],
+      "id": "c0525582-1fff-4071-a654-07c0d1c4d7c7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://a.klaviyo.com/api/lists/{{ $('Set Klaviyo List').item.json['Id list'] }}/relationships/profiles",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "revision",
+              "value": "2026-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"type\": \"profile\",\n      \"id\": \"{{ $json[\"ID Profile\"] }}\"\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2080,
+        592
+      ],
+      "id": "e39bd15c-ddbb-449b-a296-939bc6d8f12f",
+      "name": "Add Profile to List"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d564c45-e302-46af-8d39-4e98adf80c03",
+              "name": "name",
+              "value": "={{$json.body.data[\"field:im_ya\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "ed7cba04-9830-4251-8d8f-b4aa5101c621",
+              "name": "last_name",
+              "value": "={{$json.body.data[\"field:prizvische\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "046741fc-f056-4417-82c7-1cebdc1039f6",
+              "name": "email",
+              "value": "={{$json.body.data[\"field:pochta\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "4af6826f-c63c-447e-a384-775fd8242399",
+              "name": "telephone",
+              "value": "={{$json.body.data[\"field:telefon\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "3dcf7951-8e44-4444-b818-b0fc8b9c6c07",
+              "name": "note",
+              "value": "={{ $json.body.data[\"field:komentar\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        192
+      ],
+      "id": "5e9d0bc3-1480-4910-ac43-d149559b5721",
+      "name": "Lead Data Preprocessing"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.note }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Classify leads into one of three statuses: `cold`, `warm`, or `hot`.\n\nRules:\n\n* `cold`: general interest, testing, browsing, or no clear intent to buy.\n  Examples: \"just looking\", \"hello\", \"test\", \"interested in your services\".\n\n* `warm`: interested in the service or requesting information, but without urgency or project details.\n  Examples: \"need a consultation\", \"please call me back\", \"tell me more\".\n  Empty comments are also `warm`.\n\n* `hot`: strong buying intent, urgent requests, specific projects, timelines, budgets, or direct requests to contact immediately.\n  Examples: \"call me\", \"contact me\", \"urgent\", \"immediately\", \"as soon as possible\", \"need it this week\".\n\nTreat spelling mistakes and typos as valid input.\n\nReturn only valid JSON without explanations or markdown.\n\nOutput format:\n{\"status\":\"cold\"}\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -64,
+        688
+      ],
+      "id": "6410a0e7-e3a0-41e2-bc40-bc7bfb8e0f92",
+      "name": "AI Lead Qualification"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69072b86-0c48-49e0-b676-0086661096bd",
+              "name": "ID",
+              "value": "=REPLACE_WITH_KLAVIYO_LIST_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        784
+      ],
+      "id": "0fc0db20-c7fa-4469-be66-713d4927fa6b",
+      "name": "Assign Hot Segment"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69072b86-0c48-49e0-b676-0086661096bd",
+              "name": "ID",
+              "value": "=REPLACE_WITH_KLAVIYO_LIST_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        592
+      ],
+      "id": "ed13c1f7-2f21-4466-9919-570605a060db",
+      "name": "Assign Warm Segment"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69072b86-0c48-49e0-b676-0086661096bd",
+              "name": "ID",
+              "value": "=REPLACE_WITH_KLAVIYO_LIST_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        400
+      ],
+      "id": "7fba4ef9-a0c1-44a7-9e0f-bf58bfed87e2",
+      "name": "Assign Cold Segment"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ім`я": "={{ $json.name }}",
+            "Прізвище": "={{ $json.last_name }}",
+            "Пошта": "={{ $json.email }}",
+            "Номер телефону": "={{ $json.telephone }}",
+            "Коментар": "={{ $json.note }}",
+            "Дата": "={{ $now.format('f') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ім`я",
+              "displayName": "Ім`я",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Прізвище",
+              "displayName": "Прізвище",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Пошта",
+              "displayName": "Пошта",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Номер телефону",
+              "displayName": "Номер телефону",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Коментар",
+              "displayName": "Коментар",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Дата",
+              "displayName": "Дата",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6b9870f2-271c-4d02-a5f0-5ffd15eeeb18",
+      "name": "Save Lead to Google Sheets"
+    },
+    {
+      "parameters": {
+        "chatId": "REPLACE_WITH_YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚀 Нова заявка з сайту\n\n👤 Ім'я: {{ $json.name }}\n👤 Прізвище: {{ $json.last_name }}\n\n📞 Телефон: {{ $json.telephone }}\n📧 Email: {{ $json.email }}\n\n💬 Коментар:\n{{ $json.note }}\n\n🕒 Дата: {{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        384
+      ],
+      "id": "e281f351-fe24-42ab-8f2b-cf14871e135c",
+      "name": "Notify Sales Team",
+      "webhookId": "1d491606-ed61-4b1e-93bd-6c1ba7cece2c"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "Company": "-",
+        "lastName": "={{ $json.name }}",
+        "additionalFields": {
+          "Description": "={{ $json.note }}",
+          "Email": "={{ $json.email }}",
+          "Full_Name": "={{ $json.last_name }}",
+          "Phone": "={{ $json.telephone }}"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "b35617d7-2e90-4be7-aea4-e7e9074b03cf",
+      "name": "Create Lead in Zoho CRM"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://a.klaviyo.com/api/profile-import",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "revision",
+              "value": "2026-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"type\": \"profile\",\n    \"attributes\": {\n      \"first_name\": \"{{ $('Lead Data Preprocessing').item.json.name }}\",\n      \"last_name\": \"{{ $('Lead Data Preprocessing').item.json.last_name }}\",\n      \"phone_number\": \"{{ $('Lead Data Preprocessing').item.json.telephone }}\",\n      \"email\": \"{{ $('Lead Data Preprocessing').item.json.email }}\"\n    }\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1632,
+        592
+      ],
+      "id": "70c51b04-6315-4121-b3ee-9e61e88fc160",
+      "name": "Add Contact to Klaviyo"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"status\": \"hot\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        912
+      ],
+      "id": "d8d9814a-64e4-43ae-a2a8-9e18c2f4f361",
+      "name": "Parse AI Qualification Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66c46905-c53b-4afd-b0bc-232a452cf702",
+              "name": "status",
+              "value": "={{ $json.output.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        688
+      ],
+      "id": "28249ed5-b75c-405d-8e8c-5b8adf0ed52a",
+      "name": "Set Lead Status"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "85c91b8f-726e-4a7f-bca1-bd0f65be7c44",
+              "name": "status",
+              "value": "warm",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        608
+      ],
+      "id": "4479bc9b-840a-41b7-9c68-528c58ea7c56",
+      "name": "Set Default Status"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "320b1f60-c5d8-422f-b206-8b0fc6f43f3f",
+              "name": "Id list",
+              "value": "={{ $json.ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        592
+      ],
+      "id": "cda3d87d-0edc-478f-bdc4-df38d4787249",
+      "name": "Set Klaviyo List"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63e92a60-ec75-4a3b-95c0-7c91ca6ac197",
+              "name": "ID Profile",
+              "value": "={{JSON.parse($json.data).data.id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1856,
+        592
+      ],
+      "id": "3b4777b1-54a3-466f-bd9d-0351a770c1aa",
+      "name": "Prepare Profile Data"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Lead Data Preprocessing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If unknown status": {
+      "main": [
+        [
+          {
+            "node": "Set Default Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Assign Cold Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Assign Warm Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Assign Hot Segment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Data Preprocessing": {
+      "main": [
+        [
+          {
+            "node": "Create Lead in Zoho CRM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Lead to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Sales Team",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Lead Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Qualification": {
+      "main": [
+        [
+          {
+            "node": "Set Lead Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Hot Segment": {
+      "main": [
+        [
+          {
+            "node": "Set Klaviyo List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Warm Segment": {
+      "main": [
+        [
+          {
+            "node": "Set Klaviyo List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Cold Segment": {
+      "main": [
+        [
+          {
+            "node": "Set Klaviyo List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Contact to Klaviyo": {
+      "main": [
+        [
+          {
+            "node": "Prepare Profile Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Qualification Result": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Lead Status": {
+      "main": [
+        [
+          {
+            "node": "If unknown status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Default Status": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Klaviyo List": {
+      "main": [
+        [
+          {
+            "node": "Add Contact to Klaviyo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Profile Data": {
+      "main": [
+        [
+          {
+            "node": "Add Profile to List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}
