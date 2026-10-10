@@ -451,8 +451,7 @@
         384
       ],
       "id": "e281f351-fe24-42ab-8f2b-cf14871e135c",
-      "name": "Notify Sales Team",
-      "webhookId": "1d491606-ed61-4b1e-93bd-6c1ba7cece2c"
+      "name": "Notify Sales Team"
     },
     {
       "parameters": {
