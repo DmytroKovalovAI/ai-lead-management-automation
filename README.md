@@ -1,21 +1,21 @@
 # AI Lead Management & CRM Automation Platform for Spec Montazh
 
-An end-to-end AI-powered lead management solution connecting website lead capture, AI qualification, CRM automation, sales notifications, and marketing segmentation.
+An AI-powered lead management solution connecting website lead capture, AI qualification, CRM automation, sales notifications, and marketing segmentation through an n8n workflow.
 
 **Project type:** Portfolio case study  
 **Focus:** AI Automation · Sales Operations · CRM Integration
 
-[View the full portfolio case study](https://app.notion.com/p/portfolio-kovalov/AI-Lead-Management-CRM-Automation-Platform-for-Spec-Montazh-3b5b7f0c14358080b7b7f8ee6200b528?source=copy_link)
+[View the full portfolio case study in Notion](https://app.notion.com/p/portfolio-kovalov/AI-Lead-Management-CRM-Automation-Platform-for-Spec-Montazh-3b5b7f0c14358080b7b7f8ee6200b528?source=copy_link)
 
 ## Business Context
 
-Spec Montazh is an engineering company that needed a unified solution for lead generation and automated lead management.
+Spec Montazh is an engineering company that needed a unified solution for lead capture and automated lead management.
 
-A corporate landing page was developed using Wix and connected to a workflow that integrates lead capture, AI qualification, CRM, sales notifications, and marketing segmentation.
+A corporate landing page was developed using Wix and connected to an n8n workflow integrating lead capture, AI qualification, CRM, sales notifications, and marketing segmentation.
 
 ## Business Problem
 
-Before implementing the solution, business tools operated without a unified automation workflow.
+Before the solution, business tools operated without a unified automation workflow.
 
 Key challenges included:
 
@@ -31,137 +31,148 @@ These manual operations required sales managers to spend time on repetitive admi
 
 The solution connects the company's Wix website with business applications through an automated workflow orchestrated by n8n.
 
-The system is designed to:
+The workflow is designed to:
 
-- Capture new inquiries submitted through the website
-- Validate and preprocess customer data
+- Capture new website inquiries
+- Preprocess lead data
 - Store lead information in Google Sheets
-- Qualify leads using an LLM through OpenRouter
-- Create lead records in Zoho CRM via API integration
+- Classify lead intent using an LLM through OpenRouter
+- Create lead records in Zoho CRM
 - Notify the sales team through Telegram
-- Create or update customer profiles in Klaviyo
-- Assign contacts to appropriate marketing segments based on AI qualification
+- Create customer profiles in Klaviyo
+- Assign contacts to marketing lists based on AI qualification
 
 ## Workflow Architecture
 
 ```mermaid
 flowchart TD
     A[Wix Website Form] --> B[n8n Workflow]
-    B --> C[Validate and Preprocess Lead]
+    B --> C[Lead Data Preprocessing]
     C --> D[Google Sheets]
-    C --> E[Zoho CRM: Create Lead]
-    C --> F[Telegram: Notify Sales Team]
-    C --> G[OpenRouter: AI Qualification]
-    G --> H[Klaviyo: Profile and Segment]
+    C --> E[Zoho CRM]
+    C --> F[Telegram Notifications]
+    C --> G[AI Lead Qualification]
+    G --> H[Status Validation]
+    H --> I[Lead Segmentation]
+    I --> J[Klaviyo Profile and List Assignment]
 ```
 
-*This is a conceptual overview of the business workflow, not an exact export of the n8n node sequence.*
+*This is a conceptual overview of the workflow, not an exact representation of every n8n node or execution dependency.*
 
 ## Workflow Breakdown
 
 ### 1. Lead Capture
 
-A potential customer submits an inquiry through the corporate Wix website.
+A potential customer submits an inquiry through the corporate Wix website. The submission is received by an n8n Webhook.
 
-### 2. Data Validation and Processing
+### 2. Data Preprocessing
 
-The incoming data is validated and preprocessed before being passed to the connected business systems.
+The workflow extracts the lead's name, surname, email, phone number, and comment from the incoming payload.
 
-### 3. Data Storage
+### 3. Business System Synchronization
 
-Lead information is recorded in Google Sheets to support data storage and process logging.
+Lead information is sent to three destinations:
 
-### 4. CRM Integration
+- **Google Sheets:** records lead data for tracking and process logging.
+- **Zoho CRM:** creates a lead record for the sales team.
+- **Telegram:** sends a notification containing the submitted lead details.
 
-A new lead is created in Zoho CRM through API integration, centralizing lead information for the sales team.
+### 4. AI-Powered Lead Qualification
 
-### 5. AI-Powered Lead Qualification
+An OpenRouter language model analyzes the lead's comment and returns a structured classification.
 
-OpenRouter is used to analyze available lead information and classify purchase intent into three categories:
+The workflow uses three categories:
 
-- **Hot:** The customer is actively looking for a solution or is ready to purchase.
-- **Warm:** The customer is interested but may require additional communication.
-- **Cold:** The customer has low purchase intent or insufficient information for qualification.
+- **Hot:** strong buying intent, urgency, a specific project, budget, timeline, or an immediate request for contact.
+- **Warm:** interest in the service or a request for information without clear urgency. Empty comments are also classified as warm.
+- **Cold:** general interest, browsing, testing, or no clear intent to buy.
 
-A Structured Output Parser is used to return AI classification results in a standardized format.
+A Structured Output Parser standardizes the model response. A subsequent validation step routes unrecognized statuses to a default status.
 
-### 6. Sales Notifications
+### 5. Marketing Segmentation
 
-The sales team receives Telegram notifications containing key details about new inquiries, enabling managers to respond promptly.
-
-### 7. Marketing Segmentation
-
-Based on AI qualification results, customer profiles are created or updated in Klaviyo and assigned to the appropriate marketing segments.
-
-The Klaviyo integration uses REST API requests to support customer profile creation and segment management.
+Based on the qualification result, the workflow maps the lead to a corresponding Klaviyo list, creates a customer profile through the Klaviyo API, and associates the profile with the selected list.
 
 ## Technology Stack
 
 | Technology | Purpose |
 |---|---|
-| Wix | Corporate landing page and lead capture form |
-| n8n | Workflow orchestration and business process automation |
-| OpenRouter API | LLM access for AI-powered lead qualification |
-| Structured Output Parser | Standardized AI classification output |
+| Wix | Corporate landing page and lead capture |
+| n8n | Workflow orchestration and automation |
+| OpenRouter API | LLM access for lead qualification |
+| Structured Output Parser | Standardized AI output |
 | Zoho CRM API | Automated lead creation |
 | Google Sheets API | Lead data storage and logging |
 | Telegram Bot API | Sales team notifications |
-| Klaviyo API | Customer profiles and marketing segmentation |
+| Klaviyo API | Customer profiles and list segmentation |
 | REST APIs | Integration between business systems |
+
+## Technical Implementation
+
+The repository includes the sanitized n8n workflow export and supporting technical documentation.
+
+- [Sanitized n8n workflow JSON](workflows/leads-save-and-inform.json)
+- [Workflow documentation and setup instructions](workflows/README.md)
+- [Architecture documentation](docs/architecture.md)
+- [Testing plan](docs/testing.md)
+
+The workflow export preserves the node structure and connections while removing execution sample data, credential references, and client-specific resource identifiers. Placeholder values must be configured before running the workflow.
 
 ## Key Implementation Areas
 
-- Corporate landing page and lead capture form
-- End-to-end n8n workflow design
-- Data validation and preprocessing
+- Website form integration and webhook-based lead capture
+- Data preprocessing and field mapping
 - AI-powered lead qualification
-- Structured output handling
+- Structured output parsing and status validation
 - Zoho CRM API integration
-- Telegram notifications
-- Klaviyo customer profile management and segmentation
-- End-to-end workflow testing
+- Google Sheets data logging
+- Telegram sales notifications
+- Klaviyo profile creation and list assignment
+- Workflow documentation and test planning
 
 ## Results
 
-The portfolio case documents the following outcomes:
+The portfolio case study reports the following outcomes:
 
-- **100% of website inquiries** are processed automatically within the documented workflow.
-- **Automated CRM creation:** new leads are created in Zoho CRM without manual data entry.
-- **Under 30 seconds:** lead processing time, compared with several minutes in the previous manual process, as reported in the case study.
-- **AI-powered qualification:** new leads are classified by purchase intent to support marketing segmentation.
-- **Unified workflow:** website inquiries, CRM, sales notifications, data storage, and marketing operations are connected.
+- **100% of website inquiries processed automatically** within the documented workflow.
+- **Automated CRM creation:** lead records are created in Zoho CRM without manual data entry.
+- **Under 30 seconds:** reported lead processing time, compared with several minutes in the previous manual process.
+- **AI-powered qualification:** leads are classified by purchase intent to support prioritization and marketing segmentation.
+- **Unified workflow:** website inquiries, CRM, notifications, data storage, and marketing operations are connected.
 
-These figures reflect the results reported in the portfolio case study. They should not be interpreted as independently verified production-scale performance benchmarks.
+These figures reflect results reported in the portfolio case study. They have not been independently verified as production-scale performance benchmarks.
 
 ## Business Value
 
 The solution is designed to:
 
 - Reduce repetitive administrative work
-- Eliminate duplicate manual data entry across connected systems
+- Reduce manual data transfer between connected systems
 - Improve consistency in lead processing
 - Help sales managers respond to new inquiries faster
 - Support lead prioritization through AI qualification
-- Enable personalized marketing through automated segmentation
+- Enable marketing segmentation based on lead intent
 - Connect lead acquisition with CRM and marketing workflows
 
 ## Security Considerations
 
-When deploying or sharing automation workflows:
+The public workflow export has been sanitized for portfolio use.
 
-- Never commit API keys, access tokens, passwords, or credentials.
-- Use n8n credentials or environment variables for sensitive configuration.
-- Use synthetic data in public examples.
-- Remove customer information, private identifiers, and internal URLs before publishing workflow exports.
-- Review all exported workflow JSON files before committing them to a public repository.
+- Credentials and execution sample data have been removed.
+- Client-specific resource identifiers have been replaced with placeholders where appropriate.
+- API keys, access tokens, passwords, and customer data must never be committed to a public repository.
+- Credentials should be configured securely in n8n.
+- Workflow exports should be reviewed before publication.
 
 ## Scope and Limitations
 
-This repository provides documentation of the solution architecture, workflow logic, integrations, and implementation approach for a portfolio case study.
+This repository documents the workflow configuration, architecture, integrations, and implementation approach for a portfolio case study.
 
-The architecture diagram is conceptual and does not represent the exact sequence of every n8n node.
+The architecture diagram is conceptual and does not represent every node-level dependency.
 
-The business outcomes and processing time described above are based on the portfolio case study and are not presented as independently audited results.
+The testing document describes planned test scenarios; it should not be interpreted as evidence that all scenarios have passed.
+
+Reported business outcomes and processing times are based on the portfolio case study and are not independently audited.
 
 ## Portfolio
 
